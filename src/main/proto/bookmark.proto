@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package bookmark;
+option java_multiple_files=true;
+option java_package="com.bookmark";
+option java_outer_classname="BookmarkProto";
+
+
+service BookmarkService {
+
+  // UNARY - RPC -> get bookmark by id
+  rpc findBookmarkById(BookmarkRequest) returns (BookmarkResponse);
+
+}
+
+message BookmarkRequest {
+  string id=1;
+}
+
+message BookmarkResponse {
+  string id=1;
+  string title=2;
+  string url=3;
+  string description=4;
+  google.protobuf.Timestamp createdAt=5;
+  google.protobuf.Timestamp updatedAt=6;
+}

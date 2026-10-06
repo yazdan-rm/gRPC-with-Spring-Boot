@@ -5,14 +5,21 @@ import com.app.dto.BookmarkRequest;
 import com.app.dto.BookmarkResponse;
 import com.app.repository.BookmarkRepository;
 import com.app.service.IBookmarkService;
+import com.bookmark.BookmarkServiceGrpc;
+import com.google.protobuf.Timestamp;
+import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.grpc.server.service.GrpcService;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
-@Service
+@GrpcService
 @RequiredArgsConstructor
-public class BookmarkServiceImpl implements IBookmarkService {
+public class BookmarkServiceImpl
+        extends BookmarkServiceGrpc.BookmarkServiceImplBase
+        implements IBookmarkService {
 
     private final BookmarkRepository bookmarkRepository;
 
@@ -78,4 +85,35 @@ public class BookmarkServiceImpl implements IBookmarkService {
                 bookmark.getUpdatedAt()
         );
     }
+
+    @Override
+    public void findBookmarkById(com.bookmark.BookmarkRequest request, StreamObserver<com.bookmark.BookmarkResponse> responseObserver) {
+        BookmarkResponse bookmarkById = findBookmarkById(request.getId());
+
+        com.bookmark.BookmarkResponse bookmarkGrpc = com.bookmark.BookmarkResponse.newBuilder()
+                .setId(bookmarkById.id())
+                .setUrl(bookmarkById.url())
+                .setTitle(bookmarkById.title())
+                .setDescription(bookmarkById.description())
+                .setCreatedAt(toTimestamp(bookmarkById.createdAt()))
+                .setUpdatedAt(toTimestamp(bookmarkById.updatedAt()))
+                .build();
+
+        responseObserver.onNext(bookmarkGrpc);
+        responseObserver.onCompleted();
+    }
+
+    private static Timestamp toTimestamp(LocalDateTime value) {
+        return Timestamp.newBuilder()
+                .setSeconds(
+                        value.toEpochSecond(ZoneOffset.UTC)
+                )
+                .setNanos(
+                        value.getNano()
+                )
+                .build();
+    }
+
 }
+
+
